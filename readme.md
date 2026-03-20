@@ -47,15 +47,25 @@ Our method outperforms existing approaches in zero-shot stereo matching tasks ac
 
 # Installation
 
-We've tested on Linux with GPU 3090, 4090, A100, V100, Jetson Orin. Other GPUs should also work, but make sure you have enough memory
+We've tested on Linux with GPU 3090, 4090, 5090, A100, V100, Jetson Orin. Other GPUs should also work, but make sure you have enough memory.
 
-```
+### Quick Setup (recommended)
+
+```bash
 conda env create -f environment.yml
-conda run -n foundation_stereo pip install flash-attn
 conda activate foundation_stereo
 ```
 
-Note that `flash-attn` needs to be installed separately to avoid [errors during environment creation](https://github.com/NVlabs/FoundationStereo/issues/20).
+This installs Python 3.12, PyTorch 2.9.0+cu128 (with RTX 5090/Blackwell support), and all required dependencies including `viser` for browser-based 3D visualization.
+
+### Optional: Flash Attention
+
+For faster inference on supported GPUs (Ampere and newer):
+```bash
+pip install flash-attn
+```
+
+Note that `flash-attn` needs to be installed separately to avoid [errors during environment creation](https://github.com/NVlabs/FoundationStereo/issues/20). If your GPU does not support flash attention, you can skip this step — the model will fall back automatically.
 
 
 # Model Weights
@@ -88,6 +98,21 @@ Tips:
 - For high-resolution image (>1000px), you can either (1) run with `--hiera 1` to enable hierarchical inference to get full resolution depth but slower; or (2) run with smaller scale, e.g. `--scale 0.5` to get downsized resolution depth but faster.
 - For faster inference, you can reduce the input image resolution by e.g. `--scale 0.5`, and reduce refine iterations by e.g. `--valid_iters 16`.
 
+## Browser-based 3D Visualization (Viser)
+
+You can view the output point cloud interactively in your browser using [viser](https://github.com/nerfstudio-project/viser):
+
+```bash
+XFORMERS_DISABLED=1 python scripts/run_demo_viser.py --left_file ./assets/left.png --right_file ./assets/right.png --ckpt_dir ./pretrained_models/11-33-40/model_best_bp2.pth --out_dir ./test_outputs/ --scale 0.5
+```
+
+Then open `http://localhost:8081` in your browser. Press `Ctrl+C` to stop the server.
+
+Additional viser-specific options:
+- `--port`: viser server port (default: 8080)
+- `--point_size`: point size for visualization (default: 0.002)
+
+Note: `--scale 0.5` is recommended for GPUs with 32GB VRAM or less when using the default `max_disp=416`. For GPUs with more memory, you can try `--scale 1`.
 
 
 # ONNX/TensorRT(TRT) Inference
