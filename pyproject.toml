@@ -29,4 +29,4 @@ flash-attn = ["flash-attn"]
 py-modules = ["foundation_stereo_utils"]
 
 [tool.setuptools.packages.find]
-include = ["foundation_stereo", "foundation_stereo.*"]
+include = ["foundation_stereo", "foundation_stereo.*", "depth_anything", "depth_anything.*"]
