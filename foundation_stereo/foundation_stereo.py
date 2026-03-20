@@ -14,17 +14,17 @@ import sys,os
 code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
 import torchvision
-from core.update import BasicSelectiveMultiUpdateBlock
-from core.extractor import ContextNetDino, Feature
-from core.geometry import Combined_Geo_Encoding_Volume
-from core.submodule import (
+from foundation_stereo.update import BasicSelectiveMultiUpdateBlock
+from foundation_stereo.extractor import ContextNetDino, Feature
+from foundation_stereo.geometry import Combined_Geo_Encoding_Volume
+from foundation_stereo.submodule import (
     BasicConv, Conv3dNormActReduced, CostVolumeDisparityAttention, FeatureAtt,
     SpatialAttentionExtractor, ChannelAttentionEnhancement, BasicConv_IN, Conv2x,
     ResnetBasicBlock3D, build_gwc_volume, build_concat_volume, disparity_regression,
     context_upsample
 )
-from core.utils.utils import InputPadder
-# from Utils import *
+from foundation_stereo.utils.utils import InputPadder
+# from foundation_stereo_utils import *
 import time,huggingface_hub
 
 

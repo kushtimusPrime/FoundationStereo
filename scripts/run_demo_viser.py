@@ -20,9 +20,9 @@ import viser
 code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
 from omegaconf import OmegaConf
-from core.utils.utils import InputPadder
-from Utils import set_logging_format, set_seed, vis_disparity, depth2xyzmap
-from core.foundation_stereo import FoundationStereo
+from foundation_stereo.utils.utils import InputPadder
+from foundation_stereo_utils import set_logging_format, set_seed, vis_disparity, depth2xyzmap
+from foundation_stereo.foundation_stereo import FoundationStereo
 
 
 if __name__ == "__main__":

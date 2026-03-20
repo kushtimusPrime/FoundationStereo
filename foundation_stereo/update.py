@@ -14,7 +14,7 @@ from einops import rearrange
 from torch import einsum
 code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
-from core.submodule import EdgeNextConvEncoder
+from foundation_stereo.submodule import EdgeNextConvEncoder
 
 class DispHead(nn.Module):
     def __init__(self, input_dim=128, hidden_dim=256, output_dim=1):

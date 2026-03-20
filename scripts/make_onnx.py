@@ -3,7 +3,7 @@ code_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(f'{code_dir}/../')
 import omegaconf, yaml, torch,pdb
 from omegaconf import OmegaConf
-from core.foundation_stereo import FoundationStereo
+from foundation_stereo.foundation_stereo import FoundationStereo
 
 
 class FoundationStereoOnnx(FoundationStereo):

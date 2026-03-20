@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foundation-stereo"
+version = "1.0.0"
+description = "FoundationStereo: Zero-Shot Stereo Matching (CVPR 2025)"
+readme = "readme.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.9.0",
+    "torchvision>=0.24.0",
+    "open3d",
+    "omegaconf",
+    "imageio",
+    "opencv-python",
+    "viser",
+    "timm",
+    "scipy",
+    "einops",
+    "numpy",
+]
+
+[project.optional-dependencies]
+flash-attn = ["flash-attn"]
+
+[tool.setuptools]
+py-modules = ["foundation_stereo_utils"]
+
+[tool.setuptools.packages.find]
+include = ["foundation_stereo", "foundation_stereo.*"]

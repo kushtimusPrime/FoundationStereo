@@ -49,14 +49,15 @@ Our method outperforms existing approaches in zero-shot stereo matching tasks ac
 
 We've tested on Linux with GPU 3090, 4090, 5090, A100, V100, Jetson Orin. Other GPUs should also work, but make sure you have enough memory.
 
-### Quick Setup (recommended)
+### pip install (recommended)
 
 ```bash
-conda env create -f environment.yml
+conda create -n foundation_stereo python=3.12 -y
 conda activate foundation_stereo
+pip install git+https://github.com/kushtimusPrime/FoundationStereo --extra-index-url https://download.pytorch.org/whl/cu128
 ```
 
-This installs Python 3.12, PyTorch 2.9.0+cu128 (with RTX 5090/Blackwell support), and all required dependencies including `viser` for browser-based 3D visualization.
+The `--extra-index-url` flag is needed so pip can find the CUDA-enabled PyTorch wheels.
 
 ### Optional: Flash Attention
 
