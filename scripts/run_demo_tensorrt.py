@@ -15,7 +15,6 @@ import copy
 
 import omegaconf
 import onnxruntime as ort
-import open3d as o3d
 import torch
 import yaml
 import time
@@ -26,7 +25,7 @@ import sys
 code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
 
-from foundation_stereo_utils import vis_disparity, depth2xyzmap, toOpen3dCloud, set_seed
+from foundation_stereo_utils import vis_disparity, depth2xyzmap, write_point_cloud, set_seed
 from foundation_stereo.foundation_stereo import FoundationStereo
 from foundation_stereo.utils.utils import InputPadder
 
@@ -83,11 +82,12 @@ def inference(left_img_path: str, right_img_path: str, model, args: argparse.Nam
                     0,0,1]).reshape(3,3)
         depth = K[0,0]*baseline/(left_disp + doffs)
         xyz_map = depth2xyzmap(depth, K)
-        pcd = toOpen3dCloud(xyz_map.reshape(-1,3), input_left.reshape(-1,3))
-        keep_mask = (np.asarray(pcd.points)[:,2]>0) & (np.asarray(pcd.points)[:,2]<=args.z_far)
-        keep_ids = np.arange(len(np.asarray(pcd.points)))[keep_mask]
-        pcd = pcd.select_by_index(keep_ids)
-        o3d.io.write_point_cloud(os.path.join(args.save_path, 'cloud', save_path), pcd)
+        points = xyz_map.reshape(-1,3)
+        colors = input_left.reshape(-1,3)
+        keep_mask = (points[:,2]>0) & (points[:,2]<=args.z_far)
+        points = points[keep_mask]
+        colors = colors[keep_mask]
+        write_point_cloud(os.path.join(args.save_path, 'cloud', save_path), points, colors)
 
 
 

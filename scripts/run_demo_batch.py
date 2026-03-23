@@ -17,7 +17,6 @@ import torch.multiprocessing as mp
 import cv2
 import imageio
 from omegaconf import OmegaConf
-import open3d as o3d
 from scipy.spatial.transform import Rotation as R
 from tqdm.auto import tqdm
 import random
@@ -27,6 +26,7 @@ sys.path.append(f'{code_dir}/../')
 
 from foundation_stereo.utils.utils import InputPadder
 from foundation_stereo.foundation_stereo import FoundationStereo
+from foundation_stereo_utils import write_point_cloud
 
 logging.basicConfig(level=logging.INFO, format='[%(filename)s:%(funcName)s()] %(message)s', datefmt='%m-%d|%H:%M:%S')
 
@@ -131,11 +131,8 @@ class CuSFMDataInference:
         xyz = (xyz @ np.linalg.inv(K).T) * depth[..., None]
         return xyz
 
-    def toOpen3dCloud(self, xyz, rgb):
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(xyz)
-        pcd.colors = o3d.utility.Vector3dVector(rgb / 255.0)
-        return pcd
+    def write_point_cloud(self, path, xyz, rgb):
+        write_point_cloud(path, xyz, rgb)
 
     def process_camera(self, left_param_id: str):
         camera_params = self.get_camera_params(left_param_id)
@@ -311,15 +308,14 @@ class CuSFMDataInference:
                 K_copy = K.copy()
                 K_copy[:2] *= scale
                 xyz_map = self.depth2xyzmap(depth, K_copy)
-                pcd = self.toOpen3dCloud(
-                    xyz_map.reshape(-1, 3), img0.reshape(-1, 3))
-                keep_mask = (np.asarray(pcd.points)[:, 2] > 0) & (
-                    np.asarray(pcd.points)[:, 2] <= self.args.z_far)
-                keep_ids = np.arange(len(np.asarray(pcd.points)))[keep_mask]
-                pcd = pcd.select_by_index(keep_ids)
-                o3d.io.write_point_cloud(
+                points = xyz_map.reshape(-1, 3)
+                colors = img0.reshape(-1, 3)
+                keep_mask = (points[:, 2] > 0) & (points[:, 2] <= self.args.z_far)
+                points = points[keep_mask]
+                colors = colors[keep_mask]
+                self.write_point_cloud(
                     f'{self.args.out_dir}/pcd/{camera}/{os.path.basename(left_file)[:-4]}.ply',
-                    pcd)
+                    points, colors)
 
 def is_left_camera(camera_name: str):
     return camera_name.endswith("_left") or camera_name.endswith("left_rgb")

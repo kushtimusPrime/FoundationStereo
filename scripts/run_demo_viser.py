@@ -21,7 +21,7 @@ code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
 from omegaconf import OmegaConf
 from foundation_stereo.utils.utils import InputPadder
-from foundation_stereo_utils import set_logging_format, set_seed, vis_disparity, depth2xyzmap
+from foundation_stereo_utils import set_logging_format, set_seed, vis_disparity, depth2xyzmap, remove_radius_outlier
 from foundation_stereo.foundation_stereo import FoundationStereo
 
 
@@ -120,16 +120,12 @@ if __name__ == "__main__":
     points = points[keep_mask]
     colors = colors[keep_mask]
 
-    # Optional denoising via open3d
+    # Optional denoising
     if args.denoise_cloud:
-        import open3d as o3d
         logging.info("Denoising point cloud...")
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(points.astype(np.float64))
-        pcd.colors = o3d.utility.Vector3dVector(colors.astype(np.float64) / 255.0)
-        cl, ind = pcd.remove_radius_outlier(nb_points=args.denoise_nb_points, radius=args.denoise_radius)
-        points = np.asarray(pcd.points)[ind].astype(np.float32)
-        colors = (np.asarray(pcd.colors)[ind] * 255).astype(np.uint8)
+        ind = remove_radius_outlier(points, nb_points=args.denoise_nb_points, radius=args.denoise_radius)
+        points = points[ind]
+        colors = colors[ind]
         logging.info(f"After denoising: {len(points)} points")
 
     logging.info(f"Point cloud has {len(points)} points")

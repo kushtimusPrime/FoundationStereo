@@ -14,12 +14,12 @@ import torch
 import logging
 import cv2
 import numpy as np
-import open3d as o3d
+import viser
 code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
 from omegaconf import OmegaConf
 from foundation_stereo.utils.utils import InputPadder
-from foundation_stereo_utils import set_logging_format, set_seed, vis_disparity, depth2xyzmap, toOpen3dCloud
+from foundation_stereo_utils import set_logging_format, set_seed, vis_disparity, depth2xyzmap, write_point_cloud, remove_radius_outlier
 from foundation_stereo.foundation_stereo import FoundationStereo
 
 
@@ -109,26 +109,34 @@ if __name__=="__main__":
     depth = K[0,0]*baseline/disp
     np.save(f'{args.out_dir}/depth_meter.npy', depth)
     xyz_map = depth2xyzmap(depth, K)
-    pcd = toOpen3dCloud(xyz_map.reshape(-1,3), img0_ori.reshape(-1,3))
-    keep_mask = (np.asarray(pcd.points)[:,2]>0) & (np.asarray(pcd.points)[:,2]<=args.z_far)
-    keep_ids = np.arange(len(np.asarray(pcd.points)))[keep_mask]
-    pcd = pcd.select_by_index(keep_ids)
-    o3d.io.write_point_cloud(f'{args.out_dir}/cloud.ply', pcd)
+    points = xyz_map.reshape(-1,3)
+    colors = img0_ori.reshape(-1,3)
+    keep_mask = (points[:,2]>0) & (points[:,2]<=args.z_far)
+    points = points[keep_mask]
+    colors = colors[keep_mask]
+    write_point_cloud(f'{args.out_dir}/cloud.ply', points, colors)
     logging.info(f"PCL saved to {args.out_dir}")
 
     if args.denoise_cloud:
       logging.info("[Optional step] denoise point cloud...")
-      cl, ind = pcd.remove_radius_outlier(nb_points=args.denoise_nb_points, radius=args.denoise_radius)
-      inlier_cloud = pcd.select_by_index(ind)
-      o3d.io.write_point_cloud(f'{args.out_dir}/cloud_denoise.ply', inlier_cloud)
-      pcd = inlier_cloud
+      ind = remove_radius_outlier(points, nb_points=args.denoise_nb_points, radius=args.denoise_radius)
+      points = points[ind]
+      colors = colors[ind]
+      write_point_cloud(f'{args.out_dir}/cloud_denoise.ply', points, colors)
 
-    logging.info("Visualizing point cloud. Press ESC to exit.")
-    vis = o3d.visualization.Visualizer()
-    vis.create_window()
-    vis.add_geometry(pcd)
-    vis.get_render_option().point_size = 1.0
-    vis.get_render_option().background_color = np.array([0.5, 0.5, 0.5])
-    vis.run()
-    vis.destroy_window()
+    logging.info("Visualizing point cloud. Open http://localhost:8080 in your browser. Press Ctrl+C to stop.")
+    server = viser.ViserServer(host="0.0.0.0", port=8080)
+    server.scene.add_point_cloud(
+      name="/point_cloud",
+      points=points.astype(np.float32),
+      colors=colors.astype(np.uint8),
+      point_size=0.002,
+      point_shape="rounded",
+    )
+    try:
+      while True:
+        import time
+        time.sleep(1.0)
+    except KeyboardInterrupt:
+      logging.info("Shutting down.")
 

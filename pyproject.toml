@@ -11,7 +11,6 @@ requires-python = ">=3.10"
 dependencies = [
     "torch>=2.9.0",
     "torchvision>=0.24.0",
-    "open3d",
     "omegaconf",
     "imageio",
     "opencv-python",

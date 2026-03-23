@@ -12,7 +12,6 @@ import torch.nn.functional as F
 import torch.nn as nn
 from functools import partial
 import pandas as pd
-import open3d as o3d
 import cv2
 import numpy as np
 # from transformations import *
@@ -40,16 +39,24 @@ def set_seed(random_seed):
   torch.backends.cudnn.benchmark = False
 
 
-def toOpen3dCloud(points,colors=None,normals=None):
-  cloud = o3d.geometry.PointCloud()
-  cloud.points = o3d.utility.Vector3dVector(points.astype(np.float64))
+def write_point_cloud(path, points, colors=None):
+  """Write a point cloud to a PLY file using trimesh."""
   if colors is not None:
-    if colors.max()>1:
-      colors = colors/255.0
-    cloud.colors = o3d.utility.Vector3dVector(colors.astype(np.float64))
-  if normals is not None:
-    cloud.normals = o3d.utility.Vector3dVector(normals.astype(np.float64))
-  return cloud
+    colors = np.array(colors)
+    if colors.max() <= 1.0 and colors.dtype in (np.float32, np.float64):
+      colors = (colors * 255).astype(np.uint8)
+    else:
+      colors = colors.astype(np.uint8)
+  cloud = trimesh.PointCloud(vertices=points.astype(np.float64), colors=colors)
+  cloud.export(path)
+
+
+def remove_radius_outlier(points, nb_points, radius):
+  """Remove radius outlier points. Returns indices of inlier points."""
+  from scipy.spatial import KDTree
+  tree = KDTree(points)
+  counts = tree.query_ball_point(points, radius, return_length=True)
+  return np.where(counts >= nb_points)[0]
 
 
 
